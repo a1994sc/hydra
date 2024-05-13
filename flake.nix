@@ -21,6 +21,13 @@
       # keep-sorted end
       ...
     }:
+    let
+      hydra =
+        { system }:
+        {
+          hydraJobs.packages.${system} = self.packages.${system};
+        };
+    in
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -49,16 +56,17 @@
       with pkgs;
       {
         formatter = treefmtEval.config.build.wrapper;
-        packages = builtins.listToAttrs (
-          map (name: {
-            name = "${name}";
-            value = pkgs.callPackage ./pkgs/${name} { };
-          }) (builtins.attrNames (builtins.readDir ./pkgs))
-        );
+        packages = nixpkgs.lib.packagesFromDirectoryRecursive {
+          inherit (pkgs) callPackage;
+          directory = ./pkgs;
+        };
       }
     )
     // {
-      hydraJobs.packages.x86_64-linux = self.packages.x86_64-linux;
-      # hydraJobs.packages.aarch64-linux = self.packages.aarch64-linux;
-    };
+      overlays = nixpkgs.lib.packagesFromDirectoryRecursive {
+        callPackage = path: overrides: import path;
+        directory = ./overlays;
+      };
+    }
+    // hydra { system = "x86_64-linux"; };
 }
