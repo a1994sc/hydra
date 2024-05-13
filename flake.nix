@@ -58,8 +58,7 @@
       }
     )
     // {
-      hydraJobs = {
-        inherit (self) packages;
-      };
+      hydraJobs.packages.x86_64-linux = self.packages.x86_64-linux;
+      # hydraJobs.packages.aarch64-linux = self.packages.aarch64-linux;
     };
 }
